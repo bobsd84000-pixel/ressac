@@ -135,6 +135,10 @@ dialog p{margin-bottom:var(--e1);font-size:15px}
 .rappel .btn{background:var(--sauge);border-color:var(--sauge);color:var(--sur-accent);flex-shrink:0;min-height:44px;padding:0 14px}
 .bande line.rempl{stroke:var(--sauge)}
 .liens{display:flex;gap:var(--e2)}
+.p-plus{color:var(--sauge)}.p-moins{color:var(--vin)}
+html.inv .p-plus{color:var(--vin)}html.inv .p-moins{color:var(--sauge)}
+html.inv .puce[data-etat=plus]{border-color:var(--vin);background:var(--vin)}
+html.inv .puce[data-etat=moins]{border-color:var(--sauge);background:var(--sauge)}
 html.nuit .offre{background:var(--papier);color:var(--encre);border:1px solid var(--trait)}
 html.nuit .offre h2{color:var(--encre)}
 html.nuit .offre input{background:var(--lin);color:var(--encre);border-color:var(--trait)}
@@ -155,6 +159,11 @@ html.nuit .offre .aide{color:var(--gris)}
       <button type="button" data-jour="auj" aria-pressed="true">Aujourd'hui</button>
     </div>
   </header>
+
+  <div class="choix reglages" role="group" aria-label="Réglages" style="margin:0 0 var(--e3)">
+    <button type="button" id="t-nuit" aria-pressed="false">Sombre/clair</button>
+    <button type="button" id="t-inv" aria-pressed="false">Inverse</button>
+  </div>
 
   <div class="veille" id="veille" hidden>
     <p id="veille-txt"></p>
@@ -197,7 +206,7 @@ html.nuit .offre .aide{color:var(--gris)}
 
     <section class="zone" aria-labelledby="t-entourage">
       <h2 id="t-entourage">Qui et quoi t'a entouré</h2>
-      <p class="sous">Une touche : ça t'a nourri. Deux touches : ça t'a vidé. Trois : pas aujourd'hui.</p>
+      <p class="sous">Une touche : ça t'a vidé. Deux touches : ça t'a nourri. Trois : pas aujourd'hui.</p>
       <div class="puces" id="puces"></div>
       <form class="ajout" id="f-tag">
         <label class="cache" for="i-tag">Ajouter une personne ou un contenu</label>
@@ -340,7 +349,7 @@ const LIMITE_PLIS = 2, JOURS_GRATUIT = 7, JOURS_PRO = 30;
 
 /* ===== Stockage (protégé) ===== */
 const CLE = 'le-pli-v1';
-const vide = () => ({days:{}, tags:['Famille','Collègues','Réseaux sociaux','Info en continu'], plis:[], pro:false, licence:'', vu:false});
+const vide = () => ({days:{}, tags:['Toxique','Collègues','Réseaux sociaux','Info en continu'], plis:[], pro:false, licence:'', vu:false});
 let S;
 try { S = Object.assign(vide(), JSON.parse(localStorage.getItem(CLE) || 'null') || {}); } catch(e){ S = vide(); }
 function sauver(msg){
@@ -374,8 +383,8 @@ function rendreSoir(){
   $$('#c-energie button').forEach(b=>b.setAttribute('aria-pressed', String(j.energy)===b.dataset.v));
   $('#puces').innerHTML = S.tags.map(t=>{
     const e = j.tags[t]||'';
-    const lab = e==='plus'?'<small>nourri</small>':e==='moins'?'<small>vidé</small>':'';
-    return `<button type="button" class="puce" data-tag="${echap(t)}" data-etat="${e}" aria-label="${echap(t)}${e==='plus'?', m\'a nourri':e==='moins'?', m\'a vidé':''}">${echap(t)} ${lab}</button>`;
+    const lab = e==='plus'?'<small>vidé</small>':e==='moins'?'<small>nourri</small>':'';
+    return `<button type="button" class="puce" data-tag="${echap(t)}" data-etat="${e}" aria-label="${echap(t)}${e==='plus'?', m\'a vidé':e==='moins'?', m\'a nourri':''}">${echap(t)} ${lab}</button>`;
   }).join('');
   $('#plis-soir').innerHTML = S.plis.length ? S.plis.map(p=>blocPli(p, j.counts[p.id]||0, 'jour')).join('')
     : '<p class="aide">Aucune répétition suivie. Exemple : « je scrolle au lit », « je me dis que je suis nulle ».</p>';
@@ -480,7 +489,7 @@ function rendreSemaine(){
   const c={};
   jours.forEach(o=>{ if(!o.j) return; Object.entries(o.j.tags||{}).forEach(([t,e])=>{ c[t]=c[t]||{plus:0,moins:0}; if(e) c[t][e]++; }); });
   const lignes = Object.entries(c).filter(([,v])=>v.plus||v.moins).sort((a,b)=>(b[1].plus+b[1].moins)-(a[1].plus+a[1].moins));
-  $('#liste-tags').innerHTML = lignes.length ? lignes.map(([t,v])=>`<li><span>${echap(t)}</span><span><span style="color:var(--sauge)">${v.plus} nourri</span> · <span style="color:var(--vin)">${v.moins} vidé</span></span></li>`).join('')
+  $('#liste-tags').innerHTML = lignes.length ? lignes.map(([t,v])=>`<li><span>${echap(t)}</span><span><span class="p-plus">${v.plus} vidé</span> · <span class="p-moins">${v.moins} nourri</span></span></li>`).join('')
     : '<li><span class="sous">Rien de noté sur cette période.</span></li>';
 }
 
@@ -520,7 +529,7 @@ $('#puces').onclick = e=>{
   const b=e.target.closest('.puce'); if(!b) return; const j=jourCourant(), t=b.dataset.tag;
   const suite={'':'plus',plus:'moins',moins:''}[j.tags[t]||''];
   if(suite) j.tags[t]=suite; else delete j.tags[t];
-  sauver(suite==='plus'?t+' : nourri':suite==='moins'?t+' : vidé':t+' : retiré'); rendreSoir();
+  sauver(suite==='plus'?t+' : vidé':suite==='moins'?t+' : nourri':t+' : retiré'); rendreSoir();
   const n=$(`.puce[data-tag="${CSS.escape(t)}"]`); if(n) n.focus();
 };
 $('#f-tag').onsubmit = e=>{
@@ -591,7 +600,7 @@ $('#b-export').onclick = ()=>{
   const t=';', q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   let csv=['date','sommeil_h','telephone_pose','qualite','energie',...tags.map(x=>'entourage: '+x),...plis.map(p=>'repetition: '+p.label)].map(q).join(t)+'\n';
   Object.keys(S.days).sort().forEach(k=>{ const j=S.days[k];
-    csv+=[k,j.sleep,j.ecran||'',['agitée','moyenne','réparatrice'][j.q]??'',j.energy??'',...tags.map(x=>({plus:'nourri',moins:'vidé'})[(j.tags||{})[x]]||''),...plis.map(p=>(j.counts||{})[p.id]||0)].map(q).join(t)+'\n'; });
+    csv+=[k,j.sleep,j.ecran||'',['agitée','moyenne','réparatrice'][j.q]??'',j.energy??'',...tags.map(x=>({plus:'vidé',moins:'nourri'})[(j.tags||{})[x]]||''),...plis.map(p=>(j.counts||{})[p.id]||0)].map(q).join(t)+'\n'; });
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download='ressac-carnet.csv'; a.click();
   montrer('Carnet exporté');
 };
@@ -613,10 +622,13 @@ $('#i-ecran').onchange = e=>{ jourCourant().ecran = e.target.value; sauver(e.tar
 /* ===== v2 : veille de nuit, de 23 h à 6 h ===== */
 const cibleNuit = () => cle(new Date(Date.now()+6*36e5));
 function veille(){
-  const now=new Date(), h=now.getHours(), nuit = h>=23 || h<6;
+  const now=new Date(), h=now.getHours(), heure = h>=23 || h<6;
+  const nuit = S.theme ? S.theme==='nuit' : heure;
   document.documentElement.classList.toggle('nuit', nuit);
+  document.documentElement.classList.toggle('inv', !!S.inv);
   document.querySelector('meta[name=theme-color]').content = nuit ? '#1A1815' : '#E7E9E4';
-  $('#veille').hidden = !nuit; if(!nuit) return;
+  majReglages();
+  $('#veille').hidden = !heure; if(!heure) return;
   const pose = (S.days[cibleNuit()]||{}).ecran;
   $('#veille-txt').textContent = pose ? `Téléphone posé à ${lisible(pose)}. Bonne nuit.` : `Il est ${lisible(hhmm(now))}. Ta nuit compte pour demain.`;
   $('#b-pose').hidden = !!pose;
@@ -625,6 +637,15 @@ $('#b-pose').onclick = ()=>{
   const t=hhmm(new Date()); entree(cibleNuit()).ecran=t; sauver('Posé à '+lisible(t)+'. Bonne nuit');
   veille(); if(!$('#vue-soir').hidden) rendreSoir();
 };
+
+/* ===== Réglages : sombre / clair, nourri / vidé inversés ===== */
+function modeNuit(){ const h=new Date().getHours(); return S.theme ? S.theme==='nuit' : (h>=23||h<6); }
+function majReglages(){
+  $('#t-nuit').setAttribute('aria-pressed', String(modeNuit()));
+  $('#t-inv').setAttribute('aria-pressed', String(!!S.inv));
+}
+$('#t-nuit').onclick = ()=>{ S.theme = modeNuit() ? 'jour' : 'nuit'; sauver(); veille(); };
+$('#t-inv').onclick = ()=>{ S.inv = !S.inv; sauver(S.inv?'Nourri et vidé inversés':'Couleurs rétablies'); veille(); rendreSoir(); };
 
 /* ===== Démarrage ===== */
 veille(); setInterval(veille, 60000);
