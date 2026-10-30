@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ressac · Sommeil, entourage et répétitions en 30 secondes par soir</title>
+<meta name="description" content="Note ton sommeil, ce qui t'a nourri ou vidé, et les pensées que tu répètes. Ressac te montre le lien avec ton énergie. Tes données restent sur ton téléphone.">
+<meta name="theme-color" content="#E7E9E4">
+<meta property="og:title" content="Ressac : vois ce qui pèse vraiment sur ton énergie">
+<meta property="og:description" content="Sommeil, entourage, répétitions. 30 secondes par soir, données gardées sur ton téléphone.">
+<meta property="og:image" content="og-ressac.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23E7E9E4'/%3E%3Cpath d='M5 13c3-4 6-4 9 0s6 4 9 0 3-3 4-2M5 21c3-4 6-4 9 0s6 4 9 0 3-3 4-2' fill='none' stroke='%23A9741F' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lin:#E7E9E4; --papier:#F3F4F0; --encre:#1E2729; --gris:#5B6669; --trait:#C9CEC6;
+  --prusse:#27476A; --ocre:#A9741F; --vin:#7A3B46; --sauge:#3F6A57;
+  --sur-accent:#fff;
+  --r-ctrl:6px; --r-bloc:12px;
+  --e1:8px; --e2:16px; --e3:24px; --e4:40px;
+  --titre:'Newsreader',Georgia,serif; --ui:'Atkinson Hyperlegible',system-ui,sans-serif;
+}
+html.nuit{--lin:#1A1815;--papier:#25221E;--encre:#E8DFD0;--gris:#A89F91;--trait:#3B3630;--prusse:#93ADC9;--ocre:#D6A552;--vin:#D6929D;--sauge:#93BEA7;--sur-accent:#1A1815;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--lin);color:var(--encre);font:17px/1.5 var(--ui);min-height:100dvh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--prusse);outline-offset:2px;border-radius:var(--r-ctrl)}
+.saut{position:absolute;left:-999px}.saut:focus{left:var(--e2);top:var(--e2);background:var(--papier);padding:var(--e1) var(--e2);z-index:9}
+.cache{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+main{max-width:560px;margin:0 auto;padding:calc(var(--e3) + env(safe-area-inset-top)) var(--e2) 0}
+header.haut{display:flex;align-items:baseline;justify-content:space-between;gap:var(--e2);margin-bottom:var(--e3)}
+.marque{font:600 26px/1 var(--titre);letter-spacing:-.01em}
+.jour{display:flex;background:var(--papier);border:1px solid var(--trait);border-radius:var(--r-ctrl);padding:3px}
+.jour button{border:0;background:none;padding:6px 12px;border-radius:4px;font-size:15px;min-height:36px}
+.jour button[aria-pressed=true]{background:var(--encre);color:var(--papier)}
+h1{font:500 30px/1.15 var(--titre);letter-spacing:-.015em;margin-bottom:var(--e1)}
+h2{font:600 21px/1.25 var(--titre);margin-bottom:var(--e1)}
+.sous{color:var(--gris);font-size:15px}
+section.zone{padding:var(--e3) 0;border-top:1px solid var(--trait)}
+section.zone:first-of-type{border-top:0;padding-top:0}
+.vue[hidden]{display:none}
+
+/* Sommeil */
+.heures{display:flex;align-items:baseline;gap:var(--e1);margin:var(--e2) 0 var(--e1)}
+.heures output{font:600 44px/1 var(--titre);color:var(--prusse);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--prusse);height:44px}
+.choix{display:flex;gap:var(--e1);flex-wrap:wrap;margin-top:var(--e1)}
+.choix button{flex:1;min-height:48px;border:1px solid var(--trait);background:var(--papier);border-radius:var(--r-ctrl);padding:0 var(--e1);font-size:15px}
+.choix button[aria-pressed=true]{border-color:var(--prusse);background:var(--prusse);color:var(--sur-accent)}
+.energie button[aria-pressed=true]{border-color:var(--encre);background:var(--encre)}
+
+/* Entourage */
+.puces{display:flex;flex-wrap:wrap;gap:var(--e1);margin-top:var(--e2)}
+.puce{min-height:44px;border:1px solid var(--trait);background:var(--papier);border-radius:22px;padding:0 14px;font-size:15px;display:inline-flex;align-items:center;gap:6px}
+.puce[data-etat=plus]{border-color:var(--sauge);background:var(--sauge);color:var(--sur-accent)}
+.puce[data-etat=moins]{border-color:var(--vin);background:var(--vin);color:var(--sur-accent)}
+.puce small{font-size:12px;opacity:.85}
+.ajout{display:flex;gap:var(--e1);margin-top:var(--e2)}
+.ajout input{flex:1;min-width:0;min-height:48px;border:1px solid var(--trait);background:var(--papier);border-radius:var(--r-ctrl);padding:0 12px}
+.btn{min-height:48px;border:1px solid var(--encre);background:var(--encre);color:var(--papier);border-radius:var(--r-ctrl);padding:0 18px;font-weight:700}
+.btn.leger{background:transparent;color:var(--encre)}
+.aide{font-size:14px;color:var(--gris);margin-top:var(--e1)}
+
+/* Plis */
+.pli{padding:var(--e2) 0;border-bottom:1px dashed var(--trait)}
+.pli:last-child{border-bottom:0}
+.pli-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--e2)}
+.pli-nom{font-weight:700;line-height:1.3}
+.pli-sens{font-size:13px;color:var(--gris)}
+.pli-sens.defaire{color:var(--vin)}
+.plus1{min-width:64px;min-height:48px;border:1px solid var(--ocre);background:var(--papier);color:var(--ocre);border-radius:var(--r-ctrl);font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.plus1:active{background:var(--ocre);color:var(--sur-accent)}
+.bande{display:block;width:100%;height:46px;margin-top:var(--e1);background:var(--papier);border-radius:var(--r-ctrl)}
+.bande line{stroke:var(--ocre);stroke-linecap:round}
+.bande line.neuf{stroke-dasharray:60;stroke-dashoffset:60;animation:tracer .22s ease-out forwards}
+@keyframes tracer{to{stroke-dashoffset:0}}
+.pli-pied{display:flex;justify-content:space-between;font-size:13px;color:var(--gris);margin-top:6px}
+.lien{border:0;background:none;color:var(--gris);text-decoration:underline;font-size:13px;padding:8px 0;min-height:36px}
+
+/* Semaine */
+.graph{width:100%;height:auto;display:block;margin-top:var(--e2)}
+.constat{background:var(--papier);border-radius:var(--r-bloc);padding:var(--e2);margin-top:var(--e2);font:500 19px/1.4 var(--titre)}
+.constat .sous{font:15px/1.5 var(--ui);margin-top:var(--e1);display:block}
+.legende{display:flex;gap:var(--e2);font-size:13px;color:var(--gris);margin-top:var(--e1)}
+.legende i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.liste-tags{margin-top:var(--e1);padding-left:0;list-style:none}
+.liste-tags li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--trait);font-size:15px}
+
+/* Pro */
+.offre{background:var(--encre);color:var(--papier);border-radius:var(--r-bloc);padding:var(--e3) var(--e2)}
+.offre h2{color:var(--papier)}
+.offre ul{padding-left:20px;margin:var(--e2) 0;line-height:1.7}
+.offre .btn{background:var(--ocre);border-color:var(--ocre);color:var(--sur-accent);width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.offre .btn.leger{background:transparent;border-color:var(--papier);color:var(--papier);margin-top:var(--e1)}
+.offre input{width:100%;min-height:48px;border-radius:var(--r-ctrl);border:1px solid #4a5558;background:#2a3437;color:var(--papier);padding:0 12px;margin-top:var(--e2)}
+.offre .aide{color:#b9c2c4}
+
+/* Barre du bas */
+nav.onglets{position:fixed;left:0;right:0;bottom:0;background:var(--papier);border-top:1px solid var(--trait);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.onglets .in{display:flex;max-width:560px;width:100%}
+nav.onglets button{flex:1;border:0;background:none;min-height:60px;font-size:14px;color:var(--gris);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+nav.onglets button[aria-current=page]{color:var(--encre);font-weight:700}
+nav.onglets svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+.statut{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--encre);color:var(--papier);font-size:14px;padding:8px 14px;border-radius:var(--r-ctrl);opacity:0;transition:opacity .18s;pointer-events:none;z-index:6}
+.statut.vu{opacity:1}
+
+footer.bas{max-width:560px;margin:var(--e4) auto 0;padding:var(--e3) var(--e2);border-top:1px solid var(--trait);font-size:14px;color:var(--gris)}
+footer.bas p+p{margin-top:var(--e1)}
+footer.bas a{color:var(--encre)}
+
+dialog{border:0;border-radius:var(--r-bloc);padding:var(--e3);max-width:520px;width:calc(100% - 32px);background:var(--papier);color:var(--encre);box-shadow:0 12px 40px rgba(30,39,41,.25)}
+dialog::backdrop{background:rgba(30,39,41,.45)}
+dialog h2{margin-bottom:var(--e2)}
+dialog p{margin-bottom:var(--e1);font-size:15px}
+.accueil p{font-size:16px}
+.accueil dl{margin:var(--e2) 0}
+.accueil dt{font:600 18px/1.3 var(--titre);margin-top:var(--e2)}
+.accueil dd{color:var(--gris);font-size:15px}
+
+/* v2 : veille de nuit, dernier écran, remplacement */
+.veille{background:var(--papier);border:1px solid var(--trait);border-radius:var(--r-bloc);padding:var(--e2);margin-bottom:var(--e3)}
+.veille p{font:500 19px/1.35 var(--titre)}
+.veille .btn{width:100%;margin-top:var(--e2)}
+.champ{min-height:48px;border:1px solid var(--trait);border-radius:var(--r-ctrl);padding:0 12px;background:var(--lin);color:var(--encre)}
+.ecran{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);margin-top:var(--e2);font-size:15px}
+.ecran .champ{min-width:130px}
+.rappel{display:flex;align-items:center;justify-content:space-between;gap:var(--e2);margin-top:var(--e1);padding:12px;border:1px solid var(--sauge);border-radius:var(--r-ctrl);font-size:15px}
+.rappel .btn{background:var(--sauge);border-color:var(--sauge);color:var(--sur-accent);flex-shrink:0;min-height:44px;padding:0 14px}
+.bande line.rempl{stroke:var(--sauge)}
+.liens{display:flex;gap:var(--e2)}
+html.nuit .offre{background:var(--papier);color:var(--encre);border:1px solid var(--trait)}
+html.nuit .offre h2{color:var(--encre)}
+html.nuit .offre input{background:var(--lin);color:var(--encre);border-color:var(--trait)}
+html.nuit .offre .btn.leger{border-color:var(--encre);color:var(--encre)}
+html.nuit .offre .aide{color:var(--gris)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.bande line.neuf{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<a class="saut" href="#contenu">Aller au contenu</a>
+
+<main id="contenu">
+  <header class="haut">
+    <span class="marque">Ressac</span>
+    <div class="jour" role="group" aria-label="Journée notée">
+      <button type="button" data-jour="hier" aria-pressed="false">Hier</button>
+      <button type="button" data-jour="auj" aria-pressed="true">Aujourd'hui</button>
+    </div>
+  </header>
+
+  <div class="veille" id="veille" hidden>
+    <p id="veille-txt"></p>
+    <button type="button" class="btn" id="b-pose">Je pose le téléphone</button>
+  </div>
+
+  <!-- VUE : CE SOIR -->
+  <div class="vue" id="vue-soir">
+    <h1 id="titre-jour">Ta journée</h1>
+    <p class="sous" id="enreg">Tout est gardé sur ce téléphone, dès que tu touches quelque chose.</p>
+
+    <section class="zone" aria-labelledby="t-sommeil" style="margin-top:var(--e3)">
+      <h2 id="t-sommeil">Ta nuit d'avant</h2>
+      <p class="sous">Avant de te dire que tu manques de volonté, regarde d'abord ça.</p>
+      <div class="heures"><output id="v-heures" for="r-heures">7 h</output><span class="sous">de sommeil</span></div>
+      <label class="cache" for="r-heures">Heures de sommeil</label>
+      <input type="range" id="r-heures" min="3" max="11" step="0.5" value="7">
+      <div class="choix" id="c-qualite" role="group" aria-label="Qualité du sommeil">
+        <button type="button" data-v="0" aria-pressed="false">Agitée</button>
+        <button type="button" data-v="1" aria-pressed="false">Moyenne</button>
+        <button type="button" data-v="2" aria-pressed="false">Réparatrice</button>
+      </div>
+      <div class="ecran">
+        <label for="i-ecran">Téléphone posé à</label>
+        <input type="time" id="i-ecran" class="champ">
+      </div>
+      <p class="aide">Après 23 h, le bouton du haut le note pour toi.</p>
+    </section>
+
+    <section class="zone" aria-labelledby="t-energie">
+      <h2 id="t-energie">Ton énergie ce jour-là</h2>
+      <div class="choix energie" id="c-energie" role="group" aria-label="Énergie">
+        <button type="button" data-v="1" aria-pressed="false">À plat</button>
+        <button type="button" data-v="2" aria-pressed="false">Bas</button>
+        <button type="button" data-v="3" aria-pressed="false">Correct</button>
+        <button type="button" data-v="4" aria-pressed="false">Bien</button>
+        <button type="button" data-v="5" aria-pressed="false">Plein</button>
+      </div>
+    </section>
+
+    <section class="zone" aria-labelledby="t-entourage">
+      <h2 id="t-entourage">Qui et quoi t'a entouré</h2>
+      <p class="sous">Une touche : ça t'a nourri. Deux touches : ça t'a vidé. Trois : pas aujourd'hui.</p>
+      <div class="puces" id="puces"></div>
+      <form class="ajout" id="f-tag">
+        <label class="cache" for="i-tag">Ajouter une personne ou un contenu</label>
+        <input id="i-tag" maxlength="28" placeholder="Une personne, une appli, une série…" autocomplete="off">
+        <button class="btn leger" type="submit">Ajouter</button>
+      </form>
+    </section>
+
+    <section class="zone" aria-labelledby="t-plis">
+      <h2 id="t-plis">Ce que tu répètes</h2>
+      <p class="sous">Chaque fois que la pensée ou le geste revient, touche +1. Plus une pensée revient, plus la vague prend de la force.</p>
+      <div id="plis-soir"></div>
+      <button type="button" class="btn leger" id="b-nouveau-pli" style="margin-top:var(--e2);width:100%">Ajouter une répétition à suivre</button>
+    </section>
+  </div>
+
+  <!-- VUE : SEMAINE -->
+  <div class="vue" id="vue-semaine" hidden>
+    <h1>Tes 7 derniers jours</h1>
+    <p class="sous" id="periode"></p>
+    <svg class="graph" id="graph" viewBox="0 0 340 180" role="img" aria-labelledby="graph-titre"><title id="graph-titre">Heures de sommeil et énergie par jour</title></svg>
+    <div class="legende"><span><i style="background:var(--prusse)"></i>Heures de sommeil</span><span><i style="background:var(--ocre);border-radius:50%"></i>Énergie</span></div>
+    <div class="constat" id="constat"></div>
+    <div class="constat" id="constat-ecran"></div>
+
+    <section class="zone" aria-labelledby="t-nourri" style="margin-top:var(--e3)">
+      <h2 id="t-nourri">Ce qui revient</h2>
+      <p class="sous">Compté sur la période affichée.</p>
+      <ul class="liste-tags" id="liste-tags"></ul>
+    </section>
+  </div>
+
+  <!-- VUE : PLIS -->
+  <div class="vue" id="vue-plis" hidden>
+    <h1>Tes vagues</h1>
+    <p class="sous">Le total depuis le début. Une vague à renforcer doit grossir, une vague à défaire doit retomber.</p>
+    <div id="plis-total" style="margin-top:var(--e2)"></div>
+  </div>
+
+  <!-- VUE : PRO -->
+  <div class="vue" id="vue-pro" hidden>
+    <h1>Ressac Pro</h1>
+    <p class="sous" style="margin-bottom:var(--e3)">La version gratuite reste complète pour une semaine et deux répétitions.</p>
+    <div class="offre">
+      <h2>Ce que Pro ajoute</h2>
+      <ul>
+        <li>Les 30 derniers jours au lieu de 7</li>
+        <li>Répétitions suivies sans limite (2 en gratuit)</li>
+        <li>Export de ton carnet en fichier tableur</li>
+      </ul>
+      <p id="prix" style="font:600 22px/1.2 var(--titre);margin-bottom:var(--e2)"></p>
+      <a class="btn" id="b-achat" href="#" target="_blank" rel="noopener">Passer à Pro</a>
+      <label class="cache" for="i-licence">Clé de licence</label>
+      <input id="i-licence" placeholder="Colle ta clé de licence reçue par e-mail" autocomplete="off">
+      <button type="button" class="btn leger" id="b-licence" style="width:100%">Activer ma clé</button>
+      <p class="aide" id="m-licence" role="status"></p>
+    </div>
+    <section class="zone" style="margin-top:var(--e3)">
+      <h2>Tes données</h2>
+      <p class="sous">Rien ne part sur un serveur. Si tu effaces les données de Safari, ton carnet part avec.</p>
+      <div style="display:flex;gap:var(--e1);margin-top:var(--e2);flex-wrap:wrap">
+        <button type="button" class="btn leger" id="b-export">Exporter (Pro)</button>
+        <button type="button" class="btn leger" id="b-effacer" style="border-color:var(--vin);color:var(--vin)">Tout effacer</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="bas">
+  <p>Ressac aide à observer tes habitudes. Ce n'est pas un outil médical et il ne remplace pas un professionnel.</p>
+  <p>Si ça ne va vraiment pas : <a href="tel:3114">3114</a>, gratuit, jour et nuit.</p>
+  <p><button type="button" class="lien" data-ouvre="d-mentions">Mentions légales</button> · <button type="button" class="lien" data-ouvre="d-confid">Confidentialité</button></p>
+</footer>
+
+<nav class="onglets" aria-label="Sections">
+  <div class="in">
+    <button type="button" data-vue="soir" aria-current="page"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Ce soir</button>
+    <button type="button" data-vue="semaine"><svg viewBox="0 0 24 24"><path d="M5 20V11M10 20V6M15 20v-7M20 20V9"/></svg>Semaine</button>
+    <button type="button" data-vue="plis"><svg viewBox="0 0 24 24"><path d="M2 10c2.5-3 4.5-3 7 0s4.5 3 7 0 4.5-3 6 0M2 16c2.5-3 4.5-3 7 0s4.5 3 7 0 4.5-3 6 0"/></svg>Vagues</button>
+    <button type="button" data-vue="pro"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>Pro</button>
+  </div>
+</nav>
+
+<div class="statut" id="statut" role="status" aria-live="polite"></div>
+
+<dialog id="d-accueil" class="accueil" aria-labelledby="t-accueil">
+  <h2 id="t-accueil">Trois choses à regarder, chaque soir</h2>
+  <p>30 secondes avant de dormir. Au bout d'une semaine, tu vois ce qui pèse vraiment sur ton énergie.</p>
+  <dl>
+    <dt>Ton sommeil</dt><dd>Souvent, ce qu'on prend pour un manque de volonté est un manque de sommeil.</dd>
+    <dt>Ton entourage et tes contenus</dt><dd>Les gens que tu vois et ce que tu regardes te remplissent ou te vident.</dd>
+    <dt>Ce que tu répètes</dt><dd>Une pensée ou un geste répété prend de la force. Compte-les pour les voir.</dd>
+  </dl>
+  <button type="button" class="btn" id="b-commencer" style="width:100%">Noter ma journée</button>
+</dialog>
+
+<dialog id="d-pli" aria-labelledby="t-pli">
+  <h2 id="t-pli">Une répétition à suivre</h2>
+  <form id="f-pli" method="dialog">
+    <label for="i-pli" style="font-size:15px">La pensée ou le geste, en quelques mots</label>
+    <input id="i-pli" class="champ" maxlength="48" required placeholder="Je me compare aux autres" style="width:100%;margin:var(--e1) 0 var(--e2)">
+    <div class="choix" id="c-sens" role="group" aria-label="Ce que tu veux en faire">
+      <button type="button" data-v="defaire" aria-pressed="true">À défaire</button>
+      <button type="button" data-v="renforcer" aria-pressed="false">À renforcer</button>
+    </div>
+    <div id="zone-rempl" style="margin-top:var(--e2)">
+      <label for="i-rempl" style="font-size:15px">À la place, je…</label>
+      <input id="i-rempl" class="champ" maxlength="60" placeholder="note une chose que j'ai réussie" style="width:100%;margin-top:var(--e1)">
+      <p class="aide">Choisi à l'avance, ce geste s'affiche à chaque +1. Tu peux laisser vide.</p>
+    </div>
+    <div style="display:flex;gap:var(--e1);margin-top:var(--e3)">
+      <button type="button" class="btn leger" id="b-annuler-pli" style="flex:1">Annuler</button>
+      <button type="submit" class="btn" id="b-ok-pli" style="flex:1">Suivre</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="d-mentions" aria-labelledby="t-mentions">
+  <h2 id="t-mentions">Mentions légales</h2>
+  <p>Éditeur : TODO nom ou raison sociale, TODO statut (micro-entreprise…), TODO SIRET.</p>
+  <p>Adresse : TODO. Contact : TODO adresse e-mail.</p>
+  <p>Directeur de la publication : TODO.</p>
+  <p>Hébergeur : Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis.</p>
+  <button type="button" class="btn" data-ferme style="width:100%;margin-top:var(--e2)">Fermer</button>
+</dialog>
+
+<dialog id="d-confid" aria-labelledby="t-confid">
+  <h2 id="t-confid">Confidentialité</h2>
+  <p>Ton carnet (sommeil, énergie, personnes et contenus, répétitions) est enregistré uniquement dans le navigateur de ton téléphone. Il n'est envoyé à aucun serveur.</p>
+  <p>Seule exception : quand tu actives une clé Pro, la clé est envoyée à Lemon Squeezy pour vérifier qu'elle est valide. Rien d'autre n'accompagne cette demande.</p>
+  <p>Pour tout supprimer : Pro, puis « Tout effacer ». Contact : TODO adresse e-mail.</p>
+  <button type="button" class="btn" data-ferme style="width:100%;margin-top:var(--e2)">Fermer</button>
+</dialog>
+
+<script>
+/* ===== Réglages à remplir ===== */
+const LIEN_ACHAT = '';   // TODO : lien de paiement Lemon Squeezy
+const PRIX = '';         // TODO : ex. « 3 € par mois »
+const LIMITE_PLIS = 2, JOURS_GRATUIT = 7, JOURS_PRO = 30;
+
+/* ===== Stockage (protégé) ===== */
+const CLE = 'le-pli-v1';
+const vide = () => ({days:{}, tags:['Famille','Collègues','Réseaux sociaux','Info en continu'], plis:[], pro:false, licence:'', vu:false});
+let S;
+try { S = Object.assign(vide(), JSON.parse(localStorage.getItem(CLE) || 'null') || {}); } catch(e){ S = vide(); }
+function sauver(msg){
+  try { localStorage.setItem(CLE, JSON.stringify(S)); } catch(e){ montrer('Enregistrement impossible : stockage plein ou bloqué'); return; }
+  if (msg) montrer(msg);
+}
+let minuteur;
+function montrer(t){ const s=document.getElementById('statut'); s.textContent=t; s.classList.add('vu'); clearTimeout(minuteur); minuteur=setTimeout(()=>s.classList.remove('vu'),1600); }
+
+/* ===== Dates ===== */
+const cle = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const ilYa = n => { const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-n); return d; };
+let choixJour = new Date().getHours() < 5 ? 'hier' : 'auj';
+const dateCourante = () => ilYa(choixJour==='hier'?1:0);
+const entree = k => S.days[k] || (S.days[k]={sleep:7,q:null,energy:null,tags:{},counts:{},rempl:{},ecran:''});
+const jourCourant = () => entree(cle(dateCourante()));
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const echap = t => String(t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const heuresTxt = h => (h%1 ? Math.floor(h)+' h 30' : h+' h');
+
+/* ===== Vue Ce soir ===== */
+function rendreSoir(){
+  const j = jourCourant(), d = dateCourante();
+  $$('.jour button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.jour===choixJour));
+  const txt = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  $('#titre-jour').textContent = (choixJour==='hier'?'Hier, ':'Aujourd\'hui, ') + txt;
+  $('#r-heures').value = j.sleep; $('#v-heures').textContent = heuresTxt(j.sleep);
+  $('#i-ecran').value = j.ecran||'';
+  $$('#c-qualite button').forEach(b=>b.setAttribute('aria-pressed', String(j.q)===b.dataset.v));
+  $$('#c-energie button').forEach(b=>b.setAttribute('aria-pressed', String(j.energy)===b.dataset.v));
+  $('#puces').innerHTML = S.tags.map(t=>{
+    const e = j.tags[t]||'';
+    const lab = e==='plus'?'<small>nourri</small>':e==='moins'?'<small>vidé</small>':'';
+    return `<button type="button" class="puce" data-tag="${echap(t)}" data-etat="${e}" aria-label="${echap(t)}${e==='plus'?', m\'a nourri':e==='moins'?', m\'a vidé':''}">${echap(t)} ${lab}</button>`;
+  }).join('');
+  $('#plis-soir').innerHTML = S.plis.length ? S.plis.map(p=>blocPli(p, j.counts[p.id]||0, 'jour')).join('')
+    : '<p class="aide">Aucune répétition suivie. Exemple : « je scrolle au lit », « je me dis que je suis nulle ».</p>';
+}
+function totalPli(id){ return Object.values(S.days).reduce((s,j)=>s+((j.counts||{})[id]||0),0); }
+function bande(n, neuf, r=0){
+  const max=36, vis=Math.min(n,max); let l='';
+  for(let i=0;i<vis;i++){
+    const x = 8 + i*(324/max), op = (0.6 + 0.4*Math.min(n,60)/60).toFixed(2);
+    l += `<line x1="${x.toFixed(1)}" y1="6" x2="${(x+6).toFixed(1)}" y2="40" stroke-width="2" opacity="${op}" ${neuf&&i===vis-1?'class="neuf"':i<Math.min(r,vis)?'class="rempl"':''}/>`;
+  }
+  return `<svg class="bande" viewBox="0 0 340 46" aria-hidden="true" preserveAspectRatio="none">${l}</svg>`;
+}
+let rappel = null;
+const totalRempl = id => Object.values(S.days).reduce((s,j)=>s+((j.rempl||{})[id]||0),0);
+function blocPli(p, n, mode, neuf){
+  const tot = totalPli(p.id);
+  const sens = p.sens==='defaire'?'<span class="pli-sens defaire">À défaire</span>':'<span class="pli-sens">À renforcer</span>';
+  if (mode==='jour'){
+    const r = (jourCourant().rempl||{})[p.id]||0;
+    const rap = rappel===p.id && p.remplace ? `<div class="rappel" role="status"><span>À la place : <strong>${echap(p.remplace)}</strong></span><button type="button" class="btn" data-fait="${p.id}">C'est fait</button></div>` : '';
+    return `<div class="pli" data-id="${p.id}">
+    <div class="pli-tete"><div><div class="pli-nom">${echap(p.label)}</div>${sens}</div>
+    <button type="button" class="plus1" data-plus="${p.id}" aria-label="Ajouter une fois : ${echap(p.label)}">+1</button></div>
+    ${bande(n, neuf, r)}${rap}
+    <div class="pli-pied"><span>${n} fois ce jour-là${r?`, ${r} remplacée${r>1?'s':''}`:''}</span><span>${tot} au total</span></div></div>`;
+  }
+  const rt = totalRempl(p.id);
+  const geste = p.sens!=='defaire' ? '' : p.remplace
+    ? `<p class="aide">À la place : <strong>${echap(p.remplace)}</strong>. Fait ${rt} fois sur ${tot}.</p>`
+    : `<p class="aide">Aucun geste de remplacement choisi.</p>`;
+  return `<div class="pli" data-id="${p.id}">
+    <div class="pli-tete"><div><div class="pli-nom">${echap(p.label)}</div>${sens}</div>
+    <span style="font:600 28px/1 var(--titre);color:var(--ocre)">${tot}</span></div>
+    ${bande(tot, false, rt)}${geste}
+    <div class="pli-pied"><span>${tendance(p)}</span></div>
+    <div class="liens"><button type="button" class="lien" data-modif="${p.id}">${p.sens==='defaire'&&!p.remplace?'Choisir un geste de remplacement':'Modifier'}</button><button type="button" class="lien" data-suppr="${p.id}">Arrêter de suivre</button></div></div>`;
+}
+function tendance(p){
+  let a=0,b=0; for(let i=0;i<7;i++){ a+=((S.days[cle(ilYa(i))]||{}).counts||{})[p.id]||0; b+=((S.days[cle(ilYa(i+7))]||{}).counts||{})[p.id]||0; }
+  if(!a&&!b) return 'Pas encore de données cette quinzaine';
+  const mieux = p.sens==='defaire' ? a<b : a>b;
+  if(a===b) return `${a} cette semaine, comme la précédente`;
+  return `${a} cette semaine contre ${b} la précédente${mieux?', dans le bon sens':''}`;
+}
+
+/* ===== Vue Semaine ===== */
+function nbJours(){ return S.pro?JOURS_PRO:JOURS_GRATUIT; }
+function rendreSemaine(){
+  const N = nbJours(), jours=[];
+  for(let i=N-1;i>=0;i--){ const d=ilYa(i); jours.push({d, j:S.days[cle(d)]}); }
+  document.querySelector('#vue-semaine h1').textContent = `Tes ${N} derniers jours`;
+  $('#periode').textContent = 'Du '+jours[0].d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+' au '+jours[N-1].d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+  // graphique
+  const W=340,H=180,g=24,bas=H-g,larg=(W-g)/N; let s=`<title id="graph-titre">Heures de sommeil et énergie par jour</title>`;
+  [4,7,10].forEach(h=>{ const y=bas-(h/11)*(bas-8); s+=`<line x1="${g}" x2="${W}" y1="${y}" y2="${y}" style="stroke:var(--trait)" stroke-width="1"/><text x="0" y="${y+4}" font-size="10" style="fill:var(--gris)">${h} h</text>`; });
+  const pts=[];
+  jours.forEach((o,i)=>{
+    const x=g+i*larg, bw=Math.max(larg*0.56,3);
+    if(o.j && o.j.q!==null || o.j && o.j.energy){ const h=o.j.sleep, hy=(h/11)*(bas-8); s+=`<rect x="${(x+(larg-bw)/2).toFixed(1)}" y="${(bas-hy).toFixed(1)}" width="${bw.toFixed(1)}" height="${hy.toFixed(1)}" rx="2" style="fill:var(--prusse)"/>`; }
+    if(o.j && o.j.energy){ pts.push([x+larg/2, bas-(o.j.energy/5)*(bas-8)]); }
+    if(N<=7 || i%5===0) s+=`<text x="${(x+larg/2).toFixed(1)}" y="${H-6}" font-size="10" text-anchor="middle" style="fill:var(--gris)">${o.d.toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','')}</text>`;
+  });
+  if(pts.length>1) s+=`<polyline points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" style="stroke:var(--ocre)" stroke-width="2"/>`;
+  pts.forEach(p=>s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" style="fill:var(--ocre);stroke:var(--lin)" stroke-width="2"/>`);
+  $('#graph').innerHTML = s;
+  // constat sommeil / énergie (tout l'historique visible)
+  const notes = jours.filter(o=>o.j&&o.j.energy);
+  const bien = notes.filter(o=>o.j.sleep>=7), peu = notes.filter(o=>o.j.sleep<7);
+  const moy = a => a.reduce((t,o)=>t+o.j.energy,0)/a.length;
+  const mots = ['','à plat','bas','correct','bien','plein'];
+  const mot = v => mots[Math.round(v)];
+  if(bien.length>=2 && peu.length>=2){
+    const a=moy(bien), b=moy(peu), ec=a-b;
+    $('#constat').innerHTML = Math.abs(ec)<0.4
+      ? `Pour l'instant, ton sommeil ne change pas grand-chose à ton énergie.<span class="sous">${bien.length} jours après 7 h ou plus, ${peu.length} jours après moins de 7 h.</span>`
+      : (ec>0 ? `Après 7 h de sommeil ou plus, ton énergie est en moyenne « ${mot(a)} ». En dessous, elle tombe à « ${mot(b)} ».`
+              : `Curieux : tes jours après moins de 7 h sont plus énergiques (« ${mot(b)} ») que les autres (« ${mot(a)} »).`)
+        + (Math.abs(ec)<0.4?'':`<span class="sous">Calculé sur ${notes.length} journées notées. Écart de ${ec>0?'+':''}${ec.toFixed(1)} point sur 5.</span>`);
+  } else {
+    const manque = Math.max(0, 2-bien.length) + Math.max(0, 2-peu.length);
+    $('#constat').innerHTML = notes.length
+      ? `Il faut au moins 2 nuits de chaque côté de 7 h pour voir le lien avec ton énergie.<span class="sous">${notes.length} journée${notes.length>1?'s':''} notée${notes.length>1?'s':''} pour l'instant. Encore ${manque} au minimum.</span>`
+      : `Note ta première journée dans « Ce soir ». Le lien entre ton sommeil et ton énergie apparaîtra ici.`;
+  }
+  // v2 : heure du téléphone posé / sommeil
+  const mins = t => { const [h,m]=t.split(':').map(Number); return (h<12?h+24:h)*60+m; };
+  const duree = x => { const m=Math.round(x*60/5)*5; return m>=60 ? Math.floor(m/60)+' h'+(m%60?' '+String(m%60).padStart(2,'0'):'') : m+' min'; };
+  const ecr = jours.filter(o=>o.j&&o.j.ecran&&(o.j.q!==null||o.j.energy));
+  const tard = ecr.filter(o=>mins(o.j.ecran)>=1440), tot = ecr.filter(o=>mins(o.j.ecran)<1440);
+  const ms = a => a.reduce((t,o)=>t+o.j.sleep,0)/a.length;
+  if(tard.length>=2 && tot.length>=2){
+    const d = ms(tot)-ms(tard);
+    $('#constat-ecran').innerHTML = (Math.abs(d)<0.25 ? `Pour l'instant, l'heure où tu poses le téléphone change peu ta nuit.`
+      : d>0 ? `Les soirs où tu poses le téléphone après minuit, tu dors ${duree(d)} de moins.`
+            : `Curieux : tu dors ${duree(-d)} de plus les soirs où tu poses le téléphone après minuit.`)
+      + `<span class="sous">${tard.length} nuits après minuit, ${tot.length} avant. Moyenne : ${duree(ms(tard))} contre ${duree(ms(tot))}.</span>`;
+  } else {
+    $('#constat-ecran').innerHTML = `Note l'heure où tu poses le téléphone pour voir ce que les soirées tardives coûtent à ta nuit.<span class="sous">Il faut 2 nuits avant minuit et 2 après. ${ecr.length} nuit${ecr.length>1?'s':''} notée${ecr.length>1?'s':''} avec l'heure pour l'instant.</span>`;
+  }
+  // personnes et contenus
+  const c={};
+  jours.forEach(o=>{ if(!o.j) return; Object.entries(o.j.tags||{}).forEach(([t,e])=>{ c[t]=c[t]||{plus:0,moins:0}; if(e) c[t][e]++; }); });
+  const lignes = Object.entries(c).filter(([,v])=>v.plus||v.moins).sort((a,b)=>(b[1].plus+b[1].moins)-(a[1].plus+a[1].moins));
+  $('#liste-tags').innerHTML = lignes.length ? lignes.map(([t,v])=>`<li><span>${echap(t)}</span><span><span style="color:var(--sauge)">${v.plus} nourri</span> · <span style="color:var(--vin)">${v.moins} vidé</span></span></li>`).join('')
+    : '<li><span class="sous">Rien de noté sur cette période.</span></li>';
+}
+
+/* ===== Vue Plis ===== */
+function rendrePlis(){
+  $('#plis-total').innerHTML = S.plis.length ? S.plis.map(p=>blocPli(p,0,'total')).join('')
+    : '<p class="aide">Ajoute une répétition depuis « Ce soir » pour la voir revenir ici.</p>';
+}
+
+/* ===== Vue Pro ===== */
+function rendrePro(){
+  $('#prix').textContent = PRIX; $('#prix').hidden = !PRIX;
+  const a = $('#b-achat');
+  if (S.pro){ a.textContent='Pro est actif sur ce téléphone'; a.removeAttribute('href'); a.setAttribute('aria-disabled','true'); }
+  else if (LIEN_ACHAT){ a.href = LIEN_ACHAT; }
+  else { a.textContent='Paiement bientôt disponible'; a.removeAttribute('href'); a.setAttribute('aria-disabled','true'); }
+  $('#i-licence').value = S.licence||'';
+}
+
+/* ===== Navigation ===== */
+const rendus = {soir:rendreSoir, semaine:rendreSemaine, plis:rendrePlis, pro:rendrePro};
+function aller(v){
+  $$('.vue').forEach(e=>e.hidden = e.id!=='vue-'+v);
+  $$('nav.onglets button').forEach(b=>b.dataset.vue===v?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  $('.jour').style.visibility = v==='soir'?'visible':'hidden';
+  rendus[v](); window.scrollTo(0,0);
+}
+$$('nav.onglets button').forEach(b=>b.onclick=()=>aller(b.dataset.vue));
+
+/* ===== Interactions Ce soir ===== */
+$$('.jour button').forEach(b=>b.onclick=()=>{ choixJour=b.dataset.jour; rendreSoir(); });
+$('#r-heures').oninput = e=>{ const j=jourCourant(); j.sleep=+e.target.value; $('#v-heures').textContent=heuresTxt(j.sleep); sauver(); };
+$('#r-heures').onchange = ()=>montrer('Sommeil noté');
+$('#c-qualite').onclick = e=>{ const b=e.target.closest('button'); if(!b) return; jourCourant().q=+b.dataset.v; sauver('Nuit notée'); rendreSoir(); };
+$('#c-energie').onclick = e=>{ const b=e.target.closest('button'); if(!b) return; jourCourant().energy=+b.dataset.v; sauver('Énergie notée'); rendreSoir(); };
+$('#puces').onclick = e=>{
+  const b=e.target.closest('.puce'); if(!b) return; const j=jourCourant(), t=b.dataset.tag;
+  const suite={'':'plus',plus:'moins',moins:''}[j.tags[t]||''];
+  if(suite) j.tags[t]=suite; else delete j.tags[t];
+  sauver(suite==='plus'?t+' : nourri':suite==='moins'?t+' : vidé':t+' : retiré'); rendreSoir();
+  const n=$(`.puce[data-tag="${CSS.escape(t)}"]`); if(n) n.focus();
+};
+$('#f-tag').onsubmit = e=>{
+  e.preventDefault(); const v=$('#i-tag').value.trim(); if(!v) return;
+  if(S.tags.some(t=>t.toLowerCase()===v.toLowerCase())){ montrer('Déjà dans la liste'); return; }
+  S.tags.push(v); $('#i-tag').value=''; sauver('Ajouté : '+v); rendreSoir();
+};
+$('#plis-soir').onclick = e=>{
+  const j=jourCourant(), f=e.target.closest('[data-fait]');
+  if(f){ const id=f.dataset.fait; j.rempl=j.rempl||{}; j.rempl[id]=(j.rempl[id]||0)+1; rappel=null; sauver('Remplacement noté');
+    const p=S.plis.find(x=>x.id===id); f.closest('.pli').outerHTML=blocPli(p, j.counts[id]||0, 'jour');
+    const nb=$(`[data-plus="${id}"]`); if(nb) nb.focus(); return; }
+  const b=e.target.closest('[data-plus]'); if(!b) return; const id=b.dataset.plus;
+  j.counts[id]=(j.counts[id]||0)+1; sauver();
+  const p=S.plis.find(x=>x.id===id); rappel = p.sens==='defaire'&&p.remplace ? id : null;
+  b.closest('.pli').outerHTML = blocPli(p, j.counts[id], 'jour', true);
+  const nf=$(`[data-fait="${id}"]`)||$(`[data-plus="${id}"]`); if(nf) nf.focus();
+  if(navigator.vibrate) try{navigator.vibrate(8)}catch(_){}
+};
+
+/* ===== Nouvelle répétition ===== */
+let sens='defaire', edition=null;
+function majSens(){ $$('#c-sens button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.v===sens)); $('#zone-rempl').hidden = sens!=='defaire'; }
+function ouvrirPli(p){
+  edition = p ? p.id : null; sens = p ? p.sens : 'defaire';
+  $('#t-pli').textContent = p ? 'Modifier la répétition' : 'Une répétition à suivre';
+  $('#b-ok-pli').textContent = p ? 'Enregistrer' : 'Suivre';
+  $('#i-pli').value = p ? p.label : ''; $('#i-rempl').value = (p && p.remplace) || '';
+  majSens(); $('#d-pli').showModal();
+  if(p && p.sens==='defaire' && !p.remplace) $('#i-rempl').focus();
+}
+$('#b-nouveau-pli').onclick = ()=>{
+  if(!S.pro && S.plis.length>=LIMITE_PLIS){ montrer(`${LIMITE_PLIS} répétitions en gratuit. Pro : sans limite`); aller('pro'); return; }
+  ouvrirPli(null);
+};
+$('#c-sens').onclick = e=>{ const b=e.target.closest('button'); if(!b) return; sens=b.dataset.v; majSens(); };
+$('#b-annuler-pli').onclick = ()=>$('#d-pli').close();
+$('#f-pli').onsubmit = e=>{
+  const v=$('#i-pli').value.trim(); if(!v){ e.preventDefault(); return; }
+  const r = sens==='defaire' ? $('#i-rempl').value.trim() : '';
+  if(edition){ Object.assign(S.plis.find(x=>x.id===edition), {label:v, sens, remplace:r}); sauver('Répétition modifiée'); }
+  else { S.plis.push({id:'p'+Date.now().toString(36), label:v, sens, remplace:r}); sauver('Suivi : '+v); }
+  rendreSoir(); if(!$('#vue-plis').hidden) rendrePlis();
+};
+$('#plis-total').onclick = e=>{
+  const m=e.target.closest('[data-modif]'); if(m){ ouvrirPli(S.plis.find(x=>x.id===m.dataset.modif)); return; }
+  const b=e.target.closest('[data-suppr]'); if(!b) return; const p=S.plis.find(x=>x.id===b.dataset.suppr);
+  if(!confirmerTexte(`Arrêter de suivre « ${p.label} » ? Les comptes passés sont effacés.`)) return;
+  S.plis=S.plis.filter(x=>x!==p); Object.values(S.days).forEach(j=>{ if(j.counts) delete j.counts[p.id]; }); sauver('Suivi arrêté'); rendrePlis();
+};
+function confirmerTexte(t){ try { return window.confirm(t); } catch(_){ return true; } }
+
+/* ===== Pro : licence Lemon Squeezy ===== */
+$('#b-licence').onclick = async ()=>{
+  const k=$('#i-licence').value.trim(), m=$('#m-licence');
+  if(!k){ m.textContent='Colle d\'abord la clé reçue par e-mail après ton achat.'; return; }
+  m.textContent='Vérification de la clé…';
+  try{
+    const r = await fetch('https://api.lemonsqueezy.com/v1/licenses/validate',{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'},body:'license_key='+encodeURIComponent(k)});
+    const d = await r.json();
+    if(d && d.valid){ S.pro=true; S.licence=k; sauver('Pro activé'); m.textContent='Clé valide. Pro est actif sur ce téléphone.'; rendrePro(); }
+    else { m.textContent='Cette clé n\'est pas reconnue. Vérifie qu\'elle est copiée en entier, sans espace.'; }
+  }catch(_){ m.textContent='Vérification impossible : pas de connexion. Réessaie dans un instant.'; }
+};
+$('#b-export').onclick = ()=>{
+  if(!S.pro){ montrer('Export réservé à Pro'); return; }
+  const tags=S.tags, plis=S.plis;
+  const t=';', q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  let csv=['date','sommeil_h','telephone_pose','qualite','energie',...tags.map(x=>'entourage: '+x),...plis.map(p=>'repetition: '+p.label)].map(q).join(t)+'\n';
+  Object.keys(S.days).sort().forEach(k=>{ const j=S.days[k];
+    csv+=[k,j.sleep,j.ecran||'',['agitée','moyenne','réparatrice'][j.q]??'',j.energy??'',...tags.map(x=>({plus:'nourri',moins:'vidé'})[(j.tags||{})[x]]||''),...plis.map(p=>(j.counts||{})[p.id]||0)].map(q).join(t)+'\n'; });
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download='ressac-carnet.csv'; a.click();
+  montrer('Carnet exporté');
+};
+$('#b-effacer').onclick = ()=>{
+  if(!confirmerTexte('Effacer tout ton carnet sur ce téléphone ? Impossible de revenir en arrière.')) return;
+  const pro=S.pro, lic=S.licence; S=vide(); S.pro=pro; S.licence=lic; S.vu=true; sauver('Carnet effacé'); aller('soir');
+};
+
+/* ===== Fenêtres ===== */
+$$('[data-ouvre]').forEach(b=>b.onclick=()=>document.getElementById(b.dataset.ouvre).showModal());
+$$('[data-ferme]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
+$('#b-commencer').onclick = ()=>{ S.vu=true; sauver(); $('#d-accueil').close(); };
+
+/* ===== v2 : heure du téléphone posé ===== */
+const hhmm = d => String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+const lisible = t => { const [h,m]=t.split(':'); return (+h)+' h '+m; };
+$('#i-ecran').onchange = e=>{ jourCourant().ecran = e.target.value; sauver(e.target.value ? 'Heure notée' : 'Heure effacée'); };
+
+/* ===== v2 : veille de nuit, de 23 h à 6 h ===== */
+const cibleNuit = () => cle(new Date(Date.now()+6*36e5));
+function veille(){
+  const now=new Date(), h=now.getHours(), nuit = h>=23 || h<6;
+  document.documentElement.classList.toggle('nuit', nuit);
+  document.querySelector('meta[name=theme-color]').content = nuit ? '#1A1815' : '#E7E9E4';
+  $('#veille').hidden = !nuit; if(!nuit) return;
+  const pose = (S.days[cibleNuit()]||{}).ecran;
+  $('#veille-txt').textContent = pose ? `Téléphone posé à ${lisible(pose)}. Bonne nuit.` : `Il est ${lisible(hhmm(now))}. Ta nuit compte pour demain.`;
+  $('#b-pose').hidden = !!pose;
+}
+$('#b-pose').onclick = ()=>{
+  const t=hhmm(new Date()); entree(cibleNuit()).ecran=t; sauver('Posé à '+lisible(t)+'. Bonne nuit');
+  veille(); if(!$('#vue-soir').hidden) rendreSoir();
+};
+
+/* ===== Démarrage ===== */
+veille(); setInterval(veille, 60000);
+aller('soir');
+if(!S.vu && $('#d-accueil').showModal) $('#d-accueil').showModal();
+</script>
+</body>
+</html>
